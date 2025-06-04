@@ -12,8 +12,14 @@ namespace SubnetCalculator
         public IPAddress Mask => UIntToIp(PrefixToMaskUInt(Cidr));
         public IPAddress Broadcast => UIntToIp(IPToUInt(Network) | ~PrefixToMaskUInt(Cidr));
         public IPAddress FirstHost => Cidr >= 31 ? Network : UIntToIp(IPToUInt(Network) + 1);
-        public IPAddress LastHost => Cidr >= 31 ? Network : UIntToIp(IPToUInt(Broadcast) - 1);
-        public long Hosts => Cidr >= 31 ? 2 : (1L << (32 - Cidr)) - 2;
+        public IPAddress LastHost => Cidr >= 31 ? Broadcast : UIntToIp(IPToUInt(Broadcast) - 1);
+        public long Hosts =>
+            Cidr switch
+            {
+                32 => 1,
+                31 => 2,
+                _ => (1L << (32 - Cidr)) - 2
+            };
 
         private IPNetwork(IPAddress net, int cidr) { Network = net; Cidr = cidr; }
 
@@ -37,6 +43,9 @@ namespace SubnetCalculator
                 prefix = TightestAlignedPrefix(ip);
             }
 
+            if (prefix < 0 || prefix > 32)
+                throw new FormatException("Invalid prefix.");
+
             uint netUInt = IPToUInt(ip) & PrefixToMaskUInt(prefix);
             return new IPNetwork(UIntToIp(netUInt), prefix);
         }
@@ -44,7 +53,8 @@ namespace SubnetCalculator
         /*──────── subnetting ─────*/
         public IEnumerable<IPNetwork> Subnet(int newPrefix)
         {
-            if (newPrefix < Cidr) throw new ArgumentException("newPrefix must be >= current prefix");
+            if (newPrefix < Cidr || newPrefix < 0 || newPrefix > 32)
+                throw new ArgumentException("newPrefix must be between current prefix and 32");
             int blocks = 1 << (newPrefix - Cidr);
             uint size = 1u << (32 - newPrefix);
             uint start = IPToUInt(Network);
