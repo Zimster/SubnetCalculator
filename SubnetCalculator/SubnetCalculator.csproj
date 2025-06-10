@@ -8,8 +8,4 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="IPv6Network.cs" />
-  </ItemGroup>
-
 </Project>

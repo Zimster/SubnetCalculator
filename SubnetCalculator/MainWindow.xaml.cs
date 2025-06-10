@@ -16,7 +16,6 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Input;
 using System.Windows.Controls;
-using System.Numerics;
 
 namespace SubnetCalculator
 {
@@ -484,16 +483,6 @@ namespace SubnetCalculator
 
         private static IPv6Network? FirstFit6(List<IPv6Network> pool, int pref)
         {
-
-            static BigInteger IpToBig(System.Net.IPAddress ip)
-            {
-                var bytes = ip.GetAddressBytes();
-                Array.Reverse(bytes);
-                var arr = new byte[bytes.Length + 1];
-                Array.Copy(bytes, 0, arr, 1, bytes.Length);
-                return new BigInteger(arr);
-            }
-
             for (int i = 0; i < pool.Count; i++)
             {
                 var blk = pool[i];
@@ -506,8 +495,6 @@ namespace SubnetCalculator
 
 
                 pool.Sort((a, b) => IPv6Network.IPToBigInteger(a.Network).CompareTo(IPv6Network.IPToBigInteger(b.Network)));
-=======
-
                 return subs[0];
             }
             return null;
