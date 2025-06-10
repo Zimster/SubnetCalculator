@@ -487,15 +487,17 @@ namespace SubnetCalculator
             {
                 var blk = pool[i];
                 if (blk.Cidr > pref) continue;
-                var subs = blk.Subnet(pref).ToList();
-                if (!subs.Any()) continue;
-
                 pool.RemoveAt(i);
-                for (int j = 1; j < subs.Count; j++) pool.Add(subs[j]);
 
+                while (blk.Cidr < pref)
+                {
+                    var halves = blk.Subnet(blk.Cidr + 1).ToList();
+                    blk = halves[0];
+                    pool.Add(halves[1]);
+                }
 
                 pool.Sort((a, b) => IPv6Network.IPToBigInteger(a.Network).CompareTo(IPv6Network.IPToBigInteger(b.Network)));
-                return subs[0];
+                return blk;
             }
             return null;
         }
