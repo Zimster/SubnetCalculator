@@ -325,79 +325,87 @@
                 <Grid Margin="12">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+
+                        <RowDefinition Height="Auto"/>
+
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- toolbar -->
+
                     <StackPanel Orientation="Horizontal" Margin="0 0 0 10">
                         <TextBlock VerticalAlignment="Center" FontWeight="SemiBold">Starting network:</TextBlock>
-                        <TextBox x:Name="Ipv6StartBox" Width="260" Margin="8 0 0 0"/>
+                        <TextBox x:Name="Ipv6StartBox" Width="320" Margin="8 0 0 0"/>
 
-                        <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Margin="25 0 0 0">Mask / CIDR (optional):</TextBlock>
-                        <TextBox x:Name="Ipv6MaskBox" Width="150" Margin="8 0 0 0"/>
+                        <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Margin="25 0 0 0">Prefix (optional):</TextBlock>
+                        <TextBox x:Name="Ipv6MaskBox" Width="80" Margin="8 0 0 0"/>
 
-                        <Button Content="Add row"      Margin="30 0 0 0"/>
-                        <Button Content="Remove row"   Margin="8 0 0 0"/>
-                        <Button Content="Calculate"    Margin="30 0 0 0"/>
+                        <Button Content="Add row"      Click="OnAddRequest6"   Margin="30 0 0 0"/>
+                        <Button Content="Remove row"   Click="OnRemoveRequest6" Margin="8 0 0 0"/>
+                        <Button Content="Calculate"    Click="OnCalculateIpv6" Margin="30 0 0 0"/>
                     </StackPanel>
 
+
+
                     <!-- request grid -->
+
                     <DataGrid x:Name="RequestGrid6"
                           Grid.Row="1" Margin="0 0 0 10"
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
                           SelectionMode="Single" SelectionUnit="FullRow"
+
+                          MouseDoubleClick="OnCopyCell"
+
                           RowStyle="{StaticResource RowHighlight}"
                           CellStyle="{StaticResource CellHighlight}"
                           Background="{DynamicResource CtrlBg}"
                           RowBackground="{DynamicResource CtrlBg}"
                           AlternatingRowBackground="{DynamicResource AltBg}">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Label"        Binding="{Binding Label}"        Width="150"/>
-                            <DataGridTextColumn Header="Prefix (/64 default)" Binding="{Binding Prefix}" Width="120" ElementStyle="{StaticResource RightCell}"/>
-                            <DataGridTextColumn Header="Interface"    Binding="{Binding Interface}"    Width="130"/>
-                            <DataGridTextColumn Header="Notes"        Binding="{Binding Notes}"        Width="*"/>
+
+                            <DataGridTextColumn Header="Label"     Binding="{Binding Label}"     Width="150"/>
+                            <DataGridTextColumn Header="Prefix"    Binding="{Binding Prefix}"    Width="80" ElementStyle="{StaticResource RightCell}"/>
+                            <DataGridTextColumn Header="Interface" Binding="{Binding Interface}" Width="130"/>
+                            <DataGridTextColumn Header="Notes"     Binding="{Binding Notes}"     Width="*"/>
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <!-- summary -->
-                    <Border Grid.Row="2" Background="{DynamicResource CtrlBg}"
-                        CornerRadius="{StaticResource Corner4}" Padding="8" Margin="0 6">
+                    <Border Grid.Row="2" Background="{DynamicResource CtrlBg}" CornerRadius="{StaticResource Corner4}" Padding="8" Margin="0 6">
                         <TextBlock x:Name="SummaryIpv6" FontWeight="SemiBold"/>
                     </Border>
 
-                    <!-- allocations grid -->
                     <DataGrid x:Name="ResultGridIpv6"
                           Grid.Row="3" Margin="0 4"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
                           CanUserAddRows="False"
+
+                          EnableRowVirtualization="True"
                           SelectionMode="Single" SelectionUnit="FullRow"
+                          MouseDoubleClick="OnCopyCell"
+
                           RowStyle="{StaticResource RowHighlight}"
                           CellStyle="{StaticResource CellHighlight}"
                           Background="{DynamicResource CtrlBg}"
                           RowBackground="{DynamicResource CtrlBg}"
                           AlternatingRowBackground="{DynamicResource AltBg}">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="#"        Binding="{Binding Index}"     Width="55"  ElementStyle="{StaticResource RightCell}"/>
-                            <DataGridTextColumn Header="Label"    Binding="{Binding Label}"     Width="120"/>
-                            <DataGridTextColumn Header="Intf"     Binding="{Binding Interface}" Width="110"/>
-                            <DataGridTextColumn Header="Network"  Binding="{Binding Network}"   Width="220" ElementStyle="{StaticResource RightCell}"/>
-                            <DataGridTextColumn Header="Prefix"   Binding="{Binding Prefix}"    Width="80"  ElementStyle="{StaticResource RightCell}"/>
+
+                            <DataGridTextColumn Header="#"      Binding="{Binding Index}"     Width="55"  ElementStyle="{StaticResource RightCell}"/>
+                            <DataGridTextColumn Header="Label"  Binding="{Binding Label}"     Width="120"/>
+                            <DataGridTextColumn Header="Intf"   Binding="{Binding Interface}" Width="110"/>
+                            <DataGridTextColumn Header="Network" Binding="{Binding Network}"  Width="280" ElementStyle="{StaticResource RightCell}"/>
+                            <DataGridTextColumn Header="Prefix" Binding="{Binding Prefix}"   Width="80"  ElementStyle="{StaticResource RightCell}"/>
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <!-- buttons -->
-                    <StackPanel Orientation="Horizontal"
-                            Grid.Row="4"
-                            HorizontalAlignment="Right" Margin="0 6 0 0">
-                        <Button Content="Copy ACL"    Margin="0 0 8 0"/>
-                        <Button Content="Export CSV"  Margin="0 0 8 0"/>
-                        <Button Content="Export JSON" Margin="0 0 8 0"/>
-                        <Button Content="Export CLI"/>
+                    <StackPanel Orientation="Horizontal" Grid.Row="4" HorizontalAlignment="Right" Margin="0 6 0 0">
+                        <Button Content="Export CSV"  Click="OnExportCsvIpv6"  Margin="0 0 8 0"/>
+                        <Button Content="Export JSON" Click="OnExportJsonIpv6"/>
+
                     </StackPanel>
                 </Grid>
             </TabItem>

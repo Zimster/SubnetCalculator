@@ -16,6 +16,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Input;
 using System.Windows.Controls;
+using System.Numerics;
 
 namespace SubnetCalculator
 {
@@ -25,11 +26,14 @@ namespace SubnetCalculator
         private List<IPNetwork> _fixed = new();
         private readonly ObservableCollection<SubnetRequest> _req = new();
         private List<SubnetAllocation> _alloc = new();
+        private readonly ObservableCollection<Ipv6SubnetRequest> _req6 = new();
+        private List<Ipv6SubnetAllocation> _alloc6 = new();
 
         public MainWindow()
         {
             InitializeComponent();
             RequestGrid.ItemsSource = _req;
+            RequestGrid6.ItemsSource = _req6;
             ApplyTheme(light: false);                         // DARK by default
         }
 
@@ -136,10 +140,26 @@ namespace SubnetCalculator
         }
         private sealed record SubnetAllocation(int Index, string Label, string Interface, IPNetwork Net);
 
+        private sealed class Ipv6SubnetRequest
+        {
+            public string Label { get; set; } = "Site";
+            public int Prefix { get; set; } = 64;
+            public string Interface { get; set; } = "";
+            public string Notes { get; set; } = "";
+        }
+
+        private sealed record Ipv6SubnetAllocation(int Index, string Label, string Interface, IPv6Network Net);
+
         private void OnAddRequest(object? s, RoutedEventArgs e) => _req.Add(new SubnetRequest());
         private void OnRemoveRequest(object? s, RoutedEventArgs e)
         {
             if (RequestGrid.SelectedItem is SubnetRequest r) _req.Remove(r);
+        }
+
+        private void OnAddRequest6(object? s, RoutedEventArgs e) => _req6.Add(new Ipv6SubnetRequest());
+        private void OnRemoveRequest6(object? s, RoutedEventArgs e)
+        {
+            if (RequestGrid6.SelectedItem is Ipv6SubnetRequest r) _req6.Remove(r);
         }
 
         private void OnCalculateVlsm(object? s, RoutedEventArgs e) => Guarded(() =>
@@ -212,6 +232,52 @@ namespace SubnetCalculator
         private void OnCopyAclVlsm(object? s, RoutedEventArgs e) => Guarded(() =>
             CopyAcl(_alloc.Select(a => (a.Net.Network, a.Net.Cidr))));
         private void OnExportCliVlsm(object? s, RoutedEventArgs e) => Guarded(() => ExportCli());
+
+        /*════════════════  IPv6 TAB  ════════════════*/
+        private void OnCalculateIpv6(object? s, RoutedEventArgs e) => Guarded(() =>
+        {
+            string startTxt = Ipv6StartBox.Text.Trim();
+            string maskTxt = Ipv6MaskBox.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(startTxt))
+                throw new Exception("Starting network is required.");
+
+            if (!string.IsNullOrWhiteSpace(maskTxt))
+            {
+                if (maskTxt.StartsWith("/"))
+                    startTxt += maskTxt;
+                else
+                    startTxt += "/" + maskTxt;
+            }
+
+            _alloc6.Clear();
+            IPv6Network baseNet = IPv6Network.Parse(startTxt);
+            var pool = new List<IPv6Network> { baseNet };
+
+            var ordered = _req6.OrderBy(r => r.Prefix).ToList();
+            foreach (var r in ordered)
+            {
+                var blk = FirstFit6(pool, r.Prefix) ?? throw new Exception($"Not enough space for '{r.Label}'.");
+                _alloc6.Add(new(_alloc6.Count + 1, r.Label, r.Interface, blk));
+            }
+
+            ResultGridIpv6.ItemsSource = _alloc6.Select(RowIpv6).ToList();
+            SummaryIpv6.Text = $"Allocated {_alloc6.Count} blocks – Pool {pool.Count} blocks";
+        });
+
+        private static object RowIpv6(Ipv6SubnetAllocation a) => new
+        {
+            a.Index,
+            a.Label,
+            a.Interface,
+            Network = a.Net.Network,
+            Prefix = "/" + a.Net.Cidr
+        };
+
+        private void OnExportCsvIpv6(object? s, RoutedEventArgs e) => Guarded(() =>
+            ExportCsv(_alloc6.Select(RowIpv6), "ipv6"));
+        private void OnExportJsonIpv6(object? s, RoutedEventArgs e) => Guarded(() =>
+            ExportJson(_alloc6.Select(RowIpv6), "ipv6"));
 
         /*════════════════  CSV / JSON EXPORT HELPERS  ════════════════*/
         private static void ExportCsv(IEnumerable rows, string tag)
@@ -418,6 +484,7 @@ namespace SubnetCalculator
 
         private static IPv6Network? FirstFit6(List<IPv6Network> pool, int pref)
         {
+
             static BigInteger IpToBig(System.Net.IPAddress ip)
             {
                 var bytes = ip.GetAddressBytes();
@@ -437,7 +504,10 @@ namespace SubnetCalculator
                 pool.RemoveAt(i);
                 for (int j = 1; j < subs.Count; j++) pool.Add(subs[j]);
 
-                pool.Sort((a, b) => IpToBig(a.Network).CompareTo(IpToBig(b.Network)));
+
+                pool.Sort((a, b) => IPv6Network.IPToBigInteger(a.Network).CompareTo(IPv6Network.IPToBigInteger(b.Network)));
+=======
+
                 return subs[0];
             }
             return null;
