@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+
 using System.Linq;
 using System.Net;
 using System.Numerics;
+
 
 namespace SubnetCalculator
 {
@@ -11,13 +13,20 @@ namespace SubnetCalculator
         public IPAddress Network { get; }
         public int Cidr { get; }
 
-        private IPv6Network(IPAddress net, int cidr)
+
+        /*──────── parsing ────────*/
+
+        public IPAddress FirstAddress => Network;
+        public IPAddress LastAddress => BigIntToIp(IPToBigInt(Network) + HostCount - BigInteger.One);
+        public BigInteger HostCount => BigInteger.One << (128 - Cidr);
+
+        private IPv6Network(IPAddress network, int cidr)
         {
-            Network = net;
+            Network = network;
             Cidr = cidr;
         }
 
-        /*──────── parsing ────────*/
+
         public static IPv6Network Parse(string s)
         {
             var parts = s.Trim().Split(new[] { ' ', '/' }, StringSplitOptions.RemoveEmptyEntries);
@@ -25,6 +34,7 @@ namespace SubnetCalculator
 
             IPAddress ip = IPAddress.Parse(parts[0]);
             if (ip.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6)
+
                 throw new FormatException("Not an IPv6 address.");
             int prefix;
 
@@ -45,10 +55,12 @@ namespace SubnetCalculator
         }
 
         /*──────── subnetting ─────*/
+
         public IEnumerable<IPv6Network> Subnet(int newPrefix)
         {
             if (newPrefix < Cidr || newPrefix < 0 || newPrefix > 128)
                 throw new ArgumentException("newPrefix must be between current prefix and 128");
+
             BigInteger blocks = BigInteger.One << (newPrefix - Cidr);
             BigInteger size = BigInteger.One << (128 - newPrefix);
             BigInteger start = IPToBigInteger(Network);
@@ -78,10 +90,14 @@ namespace SubnetCalculator
         public static IPAddress BigIntegerToIP(BigInteger v)
         {
             var bytes = v.ToByteArray(isUnsigned: true, isBigEndian: true);
+=======
+
+
             if (bytes.Length < 16)
                 bytes = Enumerable.Repeat((byte)0, 16 - bytes.Length).Concat(bytes).ToArray();
             return new IPAddress(bytes);
         }
+
 
         public static BigInteger IPToBigInteger(IPAddress ip)
         {
@@ -89,6 +105,7 @@ namespace SubnetCalculator
             if (bytes.Length != 16)
                 throw new FormatException("Not IPv6");
             return new BigInteger(bytes, isUnsigned: true, isBigEndian: true);
+
         }
     }
 }
