@@ -17,7 +17,8 @@ namespace SubnetCalculator
         /*──────── parsing ────────*/
 
         public IPAddress FirstAddress => Network;
-        public IPAddress LastAddress => BigIntToIp(IPToBigInt(Network) + HostCount - BigInteger.One);
+        public IPAddress LastAddress =>
+            BigIntegerToIP(IPToBigInteger(Network) + HostCount - BigInteger.One);
         public BigInteger HostCount => BigInteger.One << (128 - Cidr);
 
         private IPv6Network(IPAddress network, int cidr)
@@ -90,8 +91,6 @@ namespace SubnetCalculator
         public static IPAddress BigIntegerToIP(BigInteger v)
         {
             var bytes = v.ToByteArray(isUnsigned: true, isBigEndian: true);
-=======
-
 
             if (bytes.Length < 16)
                 bytes = Enumerable.Repeat((byte)0, 16 - bytes.Length).Concat(bytes).ToArray();
